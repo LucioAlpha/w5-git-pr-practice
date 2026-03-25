@@ -89,18 +89,59 @@ header .subtitle { font-size: 13px; opacity: 0.85; margin-top: 4px; }
 .input-area button:hover { opacity: 0.85; }
 
 /* feature/add-search 新增 */
-header input {
+#search-wrap {
+  display: flex;
+  align-items: center;
   margin-top: 8px;
-  width: 100%;
+  gap: 6px;
+}
+
+#search-wrap input {
+  flex: 1;
   padding: 6px 10px;
   border: none;
   border-radius: 6px;
   font-size: 13px;
   background: rgba(255,255,255,0.25);
   color: white;
+  outline: none;
 }
-header input::placeholder { color: rgba(255,255,255,0.7); }
+#search-wrap input::placeholder { color: rgba(255,255,255,0.7); }
+#search-wrap input:focus { background: rgba(255,255,255,0.35); }
+
+#clear-search {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255,255,255,0.25);
+  border: none;
+  border-radius: 50%;
+  color: white;
+  width: 24px;
+  height: 24px;
+  cursor: pointer;
+  font-size: 12px;
+  flex-shrink: 0;
+  transition: background 0.2s;
+}
+#clear-search:hover { background: rgba(255,255,255,0.45); }
+
+#search-count {
+  font-size: 11px;
+  margin-top: 4px;
+  min-height: 16px;
+}
+#search-count.search-found { color: rgba(255,255,255,0.9); }
+#search-count.search-empty { color: rgba(255, 200, 200, 0.95); }
+
 .message.hidden { display: none; }
+
+mark {
+  background: #ffe066;
+  color: #333;
+  border-radius: 2px;
+  padding: 0 1px;
+}
 
 /* feature/add-timestamp 新增 */
 .timestamp {
