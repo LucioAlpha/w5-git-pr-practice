@@ -13,12 +13,17 @@
     <header>
       <h1>🤖 PR 練習 Chatbot</h1>
       <p class="subtitle">W5 Pull Request 練習</p>
-      <input id="search-input" type="text" placeholder="搜尋訊息..." oninput="searchMessages(this.value)">
+      <div id="search-wrap">
+        <input id="search-input" type="text" placeholder="搜尋訊息..." oninput="searchMessages(this.value)">
+        <button id="clear-search" title="清除搜尋" onclick="clearSearch()">✕</button>
+      </div>
+      <p id="search-count"></p>
     </header>
 
     <div id="chat-box">
-      <div class="message bot">
+      <div class="message bot" data-text="嗨！這週我們要學 Pull Request 🔀 試著修改我，然後開一個 PR 吧！">
         嗨！這週我們要學 Pull Request 🔀 試著修改我，然後開一個 PR 吧！
+        <span class="timestamp"></span>
       </div>
     </div>
 
@@ -36,8 +41,15 @@
 
       if (!text) return;
 
+      // 若搜尋中，先清除搜尋以正確顯示新訊息
+      const searchInput = document.getElementById('search-input');
+      if (searchInput.value) {
+        clearSearch();
+      }
+
       const userDiv = document.createElement('div');
       userDiv.className = 'message user';
+      userDiv.dataset.text = text;
       const timeUser = document.createElement('span');
       timeUser.className = 'timestamp';
       timeUser.textContent = new Date().toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit' });
@@ -47,15 +59,103 @@
 
       const botDiv = document.createElement('div');
       botDiv.className = 'message bot';
+      const botText = `你說了「${text}」！`;
+      botDiv.dataset.text = botText;
       const timeBot = document.createElement('span');
       timeBot.className = 'timestamp';
       timeBot.textContent = new Date().toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit' });
-      botDiv.textContent = `你說了「${text}」！`;
+      botDiv.textContent = botText;
       botDiv.appendChild(timeBot);
       chatBox.appendChild(botDiv);
 
       input.value = '';
       chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    function searchMessages(query) {
+      const messages = document.querySelectorAll('#chat-box .message');
+      const countEl = document.getElementById('search-count');
+      const clearBtn = document.getElementById('clear-search');
+      const q = query.trim();
+
+      // 顯示/隱藏清除按鈕
+      clearBtn.style.display = q ? 'flex' : 'none';
+
+      if (!q) {
+        // 清空搜尋：還原所有訊息
+        messages.forEach(msg => {
+          msg.classList.remove('hidden');
+          restoreText(msg);
+        });
+        countEl.textContent = '';
+        return;
+      }
+
+      let matchCount = 0;
+      const regex = new RegExp(escapeRegex(q), 'gi');
+
+      messages.forEach(msg => {
+        const originalText = msg.dataset.text || msg.textContent.trim();
+        if (originalText.toLowerCase().includes(q.toLowerCase())) {
+          msg.classList.remove('hidden');
+          // 高亮關鍵字（只對文字節點操作，避免破壞 timestamp span）
+          highlightText(msg, regex, originalText);
+          matchCount++;
+        } else {
+          msg.classList.add('hidden');
+          restoreText(msg);
+        }
+      });
+
+      if (matchCount === 0) {
+        countEl.textContent = '找不到符合的訊息';
+        countEl.className = 'search-empty';
+      } else {
+        countEl.textContent = `找到 ${matchCount} 筆訊息`;
+        countEl.className = 'search-found';
+      }
+    }
+
+    function highlightText(msgEl, regex, originalText) {
+      // 取得或重建 timestamp span
+      const tsSpan = msgEl.querySelector('.timestamp');
+      const tsText = tsSpan ? tsSpan.textContent : '';
+
+      // 清空並重建：高亮文字 + timestamp span
+      msgEl.innerHTML = '';
+      const highlighted = originalText.replace(regex, match => `<mark>${match}</mark>`);
+      msgEl.insertAdjacentHTML('beforeend', highlighted);
+      if (tsSpan) {
+        const newTs = document.createElement('span');
+        newTs.className = 'timestamp';
+        newTs.textContent = tsText;
+        msgEl.appendChild(newTs);
+      }
+    }
+
+    function restoreText(msgEl) {
+      const originalText = msgEl.dataset.text;
+      if (!originalText) return;
+      const tsSpan = msgEl.querySelector('.timestamp');
+      const tsText = tsSpan ? tsSpan.textContent : '';
+      msgEl.textContent = originalText;
+      if (tsSpan) {
+        const newTs = document.createElement('span');
+        newTs.className = 'timestamp';
+        newTs.textContent = tsText;
+        msgEl.appendChild(newTs);
+      }
+    }
+
+    function clearSearch() {
+      const searchInput = document.getElementById('search-input');
+      searchInput.value = '';
+      searchMessages('');
+      searchInput.focus();
+    }
+
+    function escapeRegex(str) {
+      return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     }
 
     document.getElementById('user-input').addEventListener('keypress', function (e) {
